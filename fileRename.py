@@ -13,8 +13,8 @@ def printAsList(input, index):
 #STEP 1: Search for files to rename
 #------------------------------------------------------------------------------
 
-print('\nEstablishing database connection, standby...')
-print('Database connection online')
+print('\nEstablishing connection, standby...')
+print('Connection online')
 
 #Find all files of specified type
 file_extension = str(input(
