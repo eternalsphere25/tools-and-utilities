@@ -758,7 +758,10 @@ if selection == 3 or selection == 4:
 
     #Write data to disk
     write_out = {"Camera": write_camera, "Image": write_image}
-    filename_out = "statistics_[" + directory.split("\\")[-1] + "].ods"
+    if selection == 3:
+        filename_out = "statistics_[" + directory.split("\\")[-1] + "][single_folder].ods"
+    elif selection == 4:
+        filename_out = "statistics_[" + directory.split("\\")[-1] + "][with_subfolders].ods"
     pyexcel_ods3.save_data(filename_out, write_out)
 
     #Closing messsages
