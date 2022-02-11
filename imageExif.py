@@ -1,15 +1,39 @@
+#------------------------------------------------------------------------------
+#This program is used for extracting, displaying, and saving photo exif metadata
+#The following options are supported:
+#   * Single file
+#   * Single folder
+#   * Single folder tally
+#   * Multi-folder (root + subdirectories) tally
+#   * Raw EXIF display with ExifTool
+#
+#The program requires a copy of ExifTool to extract metadata ExifTool can be
+#   downloaded for free from its project website:
+#   https://exiftool.org/
+#
+#Note - the program uses a scratch file to send commands to ExifTool. This is
+#   to get around ExifTool's inability to work with non-Latin characters. You
+#   must manually set the locations of the ExifTool executable and the scratch
+#   file (defined below in Part 0).
+#
+#For metadata tally export, the program saves files in OpenDocument (.ods)
+#   format. To open these files, you can use LibreOffice (downloadable for free 
+#   from project website):
+#   https://www.libreoffice.org/
+#
+#------------------------------------------------------------------------------
+
+import datetime
+import os
+import pyexcel_ods3
+import re
+import subprocess
+import warnings
+from decimal import Decimal
 from exif import Image
 from fractions import Fraction
-import warnings
-import re
-import os
-import subprocess
-from decimal import Decimal
-import pyexcel_ods3
 from imageEXIF_definitions import *
-import pandas as pd
 from tqdm import tqdm
-import datetime
 
 
 def checkForEXIF(input_image):
@@ -404,6 +428,7 @@ exiftool_write_file = "C:/exiftool-12.39/filename_input.txt"
 #Set timer start
 time_start = datetime.datetime.now()
 
+
 #-------------------------------------------------------------------------------
 # PART 1: Choose mode
 #-------------------------------------------------------------------------------
@@ -585,7 +610,7 @@ elif selection == 3:
 
 
 #-------------------------------------------------------------------------------
-# PART 2D: 
+# PART 2D: Batch metadata tallier (including subdirectories)
 #-------------------------------------------------------------------------------
 
 elif selection == 4:
@@ -669,7 +694,7 @@ elif selection == 4:
 
 
 #-------------------------------------------------------------------------------
-# PART 2X: 
+# PART 2X: Raw metadata output with ExifTool
 #-------------------------------------------------------------------------------
 
 if selection == 00:
@@ -693,82 +718,56 @@ if selection == 00:
 # PART 3: Output results to file
 #-------------------------------------------------------------------------------
 
-#Prepare EXIF dictionaries for export to disk
-manufacturers = manufacturers_EXIF_dict
-cameras = cameras_EXIF_dict
-lenses = lenses_EXIF_dict
-modes = mode_EXIF_dict
-apertures = sortDictByKey(aperture_EXIF_dict, 'float')
-shutter_speed = sortDictByKey(shutter_speed_EXIF_dict, 'shutter')
-iso = sortDictByKey(iso_EXIF_dict, 'int')
-focal_length = sortDictByKey(focal_length_EXIF_dict, 'focal_length')
-unclassified = metadata_tally_dict
+if selection == 3 or selection == 4:
 
+    #Prepare EXIF dictionaries for export to disk
+    manufacturers = manufacturers_EXIF_dict
+    cameras = cameras_EXIF_dict
+    lenses = lenses_EXIF_dict
+    modes = mode_EXIF_dict
+    apertures = sortDictByKey(aperture_EXIF_dict, 'float')
+    shutter_speed = sortDictByKey(shutter_speed_EXIF_dict, 'shutter')
+    iso = sortDictByKey(iso_EXIF_dict, 'int')
+    focal_length = sortDictByKey(focal_length_EXIF_dict, 'focal_length')
+    unclassified = metadata_tally_dict
 
-#Output with Pandas - disabled for now
-"""
-#Generate dataframes for export
-df_manufacturers = pd.DataFrame.from_dict(manufacturers, orient='index', columns=['manufacturers'])
-df_cameras = pd.DataFrame.from_dict(cameras, orient='index', columns=['cameras'])
-df_lenses = pd.DataFrame.from_dict(lenses, orient='index', columns=['lenses'])
-df_modes = pd.DataFrame.from_dict(modes, orient='index', columns=['shooting_modes'])
-df_apertures = pd.DataFrame.from_dict(apertures, orient='index', columns=['apertures'])
-df_shutter_speed = pd.DataFrame.from_dict(shutter_speed, orient='index', columns=['shutter_speed'])
-df_iso = pd.DataFrame.from_dict(iso, orient='index', columns=['iso'])
-df_focal_length = pd.DataFrame.from_dict(focal_length, orient='index', columns=['focal_length'])
-df_unclassified = pd.DataFrame.from_dict(unclassified, orient='index', columns=['unclassified'])
+    #Convert dictionaries into lists
+    manufacturers = list(manufacturers.items())
+    cameras = list(cameras.items())
+    lenses = list(lenses.items())
+    modes = list(modes.items())
+    apertures = list(apertures.items())
+    shutter_speed = list(shutter_speed.items())
+    iso = list(iso.items())
+    focal_length = list(focal_length.items())
+    unclassified = list(unclassified.items())
 
-#Write dataframes to disk
-with pd.ExcelWriter("test.ods", engine='odf') as writer:
-    df_manufacturers.to_excel(writer, sheet_name="Camera")
-    df_cameras.to_excel(writer, sheet_name="Camera")
-    df_lenses.to_excel(writer, sheet_name="Camera")
-    df_modes.to_excel(writer, sheet_name='Image')
-    df_apertures.to_excel(writer, sheet_name='Image')
-    df_shutter_speed.to_excel(writer, sheet_name='Image')
-    df_iso.to_excel(writer, sheet_name='Image')
-    df_focal_length.to_excel(writer, sheet_name="Image")
-    df_unclassified.to_excel(writer, sheet_name='Unclassified')
-"""
+    #Combine each list into a few large lists (the library requires each entire page to be a single large list)
+    title_manufacturer = [["Manufacturer", "Count"]] + manufacturers + [""]
+    title_cameras = [["Cameras", "Count"]] + cameras + [""]
+    title_lenses = [["Lenses", "Count"]] + lenses + [""]
+    title_modes = [["Shooting Modes", "Count"]] + modes + [""]
+    title_apertures = [["Apertures", "Count"]] + apertures + [""]
+    title_shutter_speed = [["Shutter Speed", "Count"]] + shutter_speed + [""]
+    title_iso = [["ISO", "Count"]] + iso + [""]
+    title_focal_length = [["Focal Length", "Count"]] + focal_length + [""]
+    title_unclassified = [['Unclassified', "Count"]] + unclassified + [""]
 
-#Convert dictionaries into lists
-manufacturers = list(manufacturers.items())
-cameras = list(cameras.items())
-lenses = list(lenses.items())
-modes = list(modes.items())
-apertures = list(apertures.items())
-shutter_speed = list(shutter_speed.items())
-iso = list(iso.items())
-focal_length = list(focal_length.items())
-unclassified = list(unclassified.items())
+    write_camera = title_manufacturer + title_cameras + title_lenses
+    write_image = title_modes + title_apertures + title_shutter_speed + title_iso + title_focal_length
 
-#Combine each list into a few large lists (the library requires each entire page to be a single large list)
-title_manufacturer = [["Manufacturer", "Count"]] + manufacturers + [""]
-title_cameras = [["Cameras", "Count"]] + cameras + [""]
-title_lenses = [["Lenses", "Count"]] + lenses + [""]
-title_modes = [["Shooting Modes", "Count"]] + modes + [""]
-title_apertures = [["Apertures", "Count"]] + apertures + [""]
-title_shutter_speed = [["Shutter Speed", "Count"]] + shutter_speed + [""]
-title_iso = [["ISO", "Count"]] + iso + [""]
-title_focal_length = [["Focal Length", "Count"]] + focal_length + [""]
-title_unclassified = [['Unclassified', "Count"]] + unclassified + [""]
+    #Write data to disk
+    write_out = {"Camera": write_camera, "Image": write_image}
+    filename_out = "statistics_[" + directory.split("\\")[-1] + "].ods"
+    pyexcel_ods3.save_data(filename_out, write_out)
 
-#write_camera = title_manufacturer + manufacturers + title_cameras + cameras + title_lenses + lenses
-#write_image = title_modes + modes  + title_apertures + apertures  + title_shutter_speed + shutter_speed  + title_iso + iso  + title_focal_length + focal_length
+    #Closing messsages
+    print("")
+    print('='*80)
+    print('\nFile "' + filename_out + '" saved to: ' + os.getcwd())
+    print('\nAll processes completed')
+    print('Program terminated')
 
-write_camera = title_manufacturer + title_cameras + title_lenses
-write_image = title_modes + title_apertures + title_shutter_speed + title_iso + title_focal_length
-
-#Write data to disk
-write_out = {"Camera": write_camera, "Image": write_image}
-filename_out = "statistics_[" + directory.split("\\")[-1] + "].ods"
-pyexcel_ods3.save_data(filename_out, write_out)
-print("")
-print('='*80)
-print('\nFile "' + filename_out + '" saved to: ' + os.getcwd())
-print('\nAll processes completed')
-print('Program terminated')
-
-#Display session length
-time_end = datetime.datetime.now()
-formatTime((time_end-time_start).total_seconds())
+    #Display session length
+    time_end = datetime.datetime.now()
+    formatTime((time_end-time_start).total_seconds())
