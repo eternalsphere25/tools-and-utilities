@@ -133,14 +133,21 @@ def listEXIFCameraInfoEXIFTool(input_exif_dict):
     print('\nCamera Information:')
     print('- Make: ' + input_exif_dict['Make'])
     print('- Model: ' + input_exif_dict['CameraModelName'])
+    #Exclude body serial number if it does not exist
     if input_exif_dict['CameraModelName'] not in phones_list and input_exif_dict['CameraModelName'] not in point_and_shoot_list:
         print('- Body Serial Number: ' + input_exif_dict['SerialNumber'])
     else:
         print('- Body Serial Number: N/A')
-        if input_exif_dict['CameraModelName'] not in point_and_shoot_list:
-            print('- Body Type: ' + input_exif_dict['DeviceType'])
-        else:
-            print('- Body Type: N/A')
+    #Show body type (DSLR, point and shoot, phone, etc)
+    if input_exif_dict['CameraModelName'] in phones_list:
+        print('- Body Type: ' + input_exif_dict['DeviceType'])
+    else:
+        if input_exif_dict['CameraModelName'] in dslr_list:
+            print('- Body Type: Digital SLR')
+        elif input_exif_dict['CameraModelName'] in mirrorless_list:
+            print('- Body Type: Mirrorless')
+        elif input_exif_dict['CameraModelName'] in point_and_shoot_list:
+            print('- Body Type: Compact Digital')
 
 def listEXIFGPSInfoEXIFTool(input_exif_dict):
     print('\nGPS Information:')
@@ -170,15 +177,20 @@ def listEXIFImageInfoEXIFTool(input_exif_dict):
 def listEXIFLensInfoEXIFTool(input_exif_dict):
     print('\nLens Information:')
     #Lens Manufacturer
-    if input_exif_dict['CameraModelName'] not in dslr_list and input_exif_dict['LensMake'] != "":
+    if input_exif_dict['CameraModelName'] not in no_lens_metadata:
         print('- Lens Manufacturer: ' + input_exif_dict['LensMake'])
+    elif input_exif_dict['CameraModelName'] in no_lens_metadata:
+        print('- Lens Manufacturer: ' + missing_lens_manufacturer[input_exif_dict['CameraModelName']])
     else:
         print('- Lens Manufacturer: N/A')
     #Lens Name
-    print('- Lens Model: ' + input_exif_dict['LensID'])
+    if input_exif_dict['CameraModelName'] not in missing_lens_model_metadata:
+        print('- Lens Model: ' + input_exif_dict['LensID'])
+    else:
+        print('- Lens Model: ' + missing_lens_model_metadata[input_exif_dict['CameraModelName']])
     #print('- Lens Model: ' + extracted_exif_dict['LensSpec'])
     #Lens Serial Number
-    if input_exif_dict['CameraModelName'] not in dslr_list and input_exif_dict['LensSerialNumber'] != "":
+    if input_exif_dict['CameraModelName'] not in no_lens_metadata:
         print('- Lens Serial Number: ' + input_exif_dict['LensSerialNumber'])
     else:
         print('- Lens Serial Number: N/A')
@@ -196,20 +208,15 @@ def orderDictByValue(input_dict):
     ordered_dict = {v: k for (k, v) in sorted_dict.items()}
     return ordered_dict
 
-def printAllEXIFDicts(input_exif_dict):
+def printAllEXIFDicts():
     print("")
     print('='*80)
     print('\nManufacturers:')
     printDictLineByLine(manufacturers_EXIF_dict)
     print('\nCameras:')
     printDictLineByLine(cameras_EXIF_dict)
-    if 'CameraModelName' in input_exif_dict.keys():
-        if input_exif_dict['CameraModelName'] not in phones_list:
-            print('\nLenses:')
-            if bool(lenses_EXIF_dict) == True:
-                printDictLineByLine(lenses_EXIF_dict)
-            else:
-                print('No Data')
+    print('\nLenses:')
+    printDictLineByLine(lenses_EXIF_dict)
     print('\nShooting Modes:')
     printDictLineByLine(mode_EXIF_dict)
     print('\nApertures:')
@@ -330,7 +337,9 @@ def sortEXIF(input_exif_dict, metadata_tally_dict, input_parameters):
             elif item == 'LensID':
                 dict_InitKey(lenses_EXIF_dict, search_key)
             elif item == 'ExposureProgram':
-                dict_InitKey(mode_EXIF_dict, search_key)                    
+                dict_InitKey(mode_EXIF_dict, search_key)
+            elif item == 'ExposureMode':
+                dict_InitKey(mode_EXIF_dict, search_key)  
             elif item == 'FNumber':
                 dict_InitKey(aperture_EXIF_dict, search_key)  
             elif item == 'ExposureTime':
@@ -348,7 +357,9 @@ def sortEXIF(input_exif_dict, metadata_tally_dict, input_parameters):
             elif item == 'LensID':
                 dict_IncrKey(lenses_EXIF_dict, search_key)
             elif item == 'ExposureProgram':
-                dict_IncrKey(mode_EXIF_dict, search_key)                    
+                dict_IncrKey(mode_EXIF_dict, search_key)
+            elif item == 'ExposureMode':
+                dict_IncrKey(mode_EXIF_dict, search_key)                 
             elif item == 'FNumber':
                 dict_IncrKey(aperture_EXIF_dict, search_key)  
             elif item == 'ExposureTime':
@@ -369,6 +380,7 @@ def sortUnclassifiedEXIF(metadata_tally_dict):
         iso_EXIF_dict,
         focal_length_EXIF_dict
         ]
+    #If an entry does not exist in any of the dicts, add it to the general dict for unclassified items
     for dictionaries in range(len(metadata_dict_list)):
         metadata_tally_dict = {k: v for k,v in metadata_tally_dict.items() if k not in metadata_dict_list[dictionaries]}
     return metadata_tally_dict
@@ -425,6 +437,9 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 exiftool_location = "C:/exiftool-12.39/exiftool.exe"
 exiftool_write_file = "C:/exiftool-12.39/filename_input.txt"
 
+#Counter for photos with no EXIF data
+no_exif = 0
+
 #Set timer start
 time_start = datetime.datetime.now()
 
@@ -433,10 +448,14 @@ time_start = datetime.datetime.now()
 # PART 1: Choose mode
 #-------------------------------------------------------------------------------
 
-print('Options: ')
+print('\n' + '='*80 + '\n')
+print('Establishing connection, please standby...')
+print('Connection online')
+
+print('\nOptions: ')
 print('1: Single File Mode')
 print('2: Single Folder Mode')
-print('3: Batch Metadata Checker/Tallier (Single Folder')
+print('3: Batch Metadata Checker/Tallier (Single Folder)')
 print('4: Batch Metadata Checker/Tallier (Including Subfolders)')
 print('00: Raw Metadata List')
 selection = int(input('\nSelection: '))
@@ -487,8 +506,7 @@ if selection == 1:
     if 'CameraModelName' in extracted_exif_dict.keys():
         print('\nSelected EXIF data:')
         listEXIFCameraInfoEXIFTool(extracted_exif_dict)
-        if extracted_exif_dict['CameraModelName'] not in no_lens_metadata:
-            listEXIFLensInfoEXIFTool(extracted_exif_dict)
+        listEXIFLensInfoEXIFTool(extracted_exif_dict)
         listEXIFImageInfoEXIFTool(extracted_exif_dict)
         if extracted_exif_dict['CameraModelName'] not in dslr_list and 'GPSLatitude' in extracted_exif_dict:
             listEXIFGPSInfoEXIFTool(extracted_exif_dict)
@@ -537,8 +555,7 @@ elif selection == 2:
         if 'CameraModelName' in extracted_exif_dict.keys():
             print('Selected EXIF data:')
             listEXIFCameraInfoEXIFTool(extracted_exif_dict)
-            if extracted_exif_dict['CameraModelName'] not in no_lens_metadata:
-                listEXIFLensInfoEXIFTool(extracted_exif_dict)
+            listEXIFLensInfoEXIFTool(extracted_exif_dict)
             listEXIFImageInfoEXIFTool(extracted_exif_dict)
         else:
             print('No EXIF data, proceeding to next file')
@@ -576,21 +593,30 @@ elif selection == 3:
         #Convert raw output to dictionary
         extracted_exif_dict = EXIFToolDataToDict(extracted_exif)
 
-        #Precheck #1: Do not process phone camera photos (no EXIF)
+        #Add in missing lens metadata where appropriate
+        if 'CameraModelName' in extracted_exif_dict.keys() and extracted_exif_dict['CameraModelName'] in no_lens_metadata:
+            extracted_exif_dict['LensID'] = missing_lens_model_metadata[extracted_exif_dict['CameraModelName']]
+
+        #Convert smartphone focal lengths to 35 mm equivalents:
+        if extracted_exif_dict['CameraModelName'] in phones_list and extracted_exif_dict['FocalLength'] in phone_35mm_conversion:
+            extracted_exif_dict['FocalLength'] = phone_35mm_conversion[extracted_exif_dict['FocalLength']]
+
+        #Precheck #1: Do not process photos with no EXIF data
         if 'CameraModelName' not in extracted_exif_dict.keys():
             #print('Processing #' + str(photo+1) + ' of ' + str(len(files_list)) + ': ' + files_list[photo] + ' [WARNING: NO EXIF DETECTED]')
         #Precheck #2: Remove selected EXIF tags based on camera (not all include every EXIF tag)
-            pass
+            no_exif += 1
         else:
             batch_parameters_EXIF_mod = batch_parameters_EXIF[:]
             batch_parameters_EXIF_labels_mod = batch_parameters_EXIF_labels[:]
-
-            if extracted_exif_dict['CameraModelName'] in phones_list or extracted_exif_dict['CameraModelName'] in point_and_shoot_list:
-                batch_parameters_EXIF_mod.remove('LensID')
-                batch_parameters_EXIF_labels_mod.remove('Lenses')
+            #if extracted_exif_dict['CameraModelName'] in phones_list or extracted_exif_dict['CameraModelName'] in point_and_shoot_list:
+            #    batch_parameters_EXIF_mod.remove('LensID')
+            #    batch_parameters_EXIF_labels_mod.remove('Lenses')
             if extracted_exif_dict['CameraModelName'] in no_exposure_program:
-                batch_parameters_EXIF_mod.remove('ExposureProgram')
-                batch_parameters_EXIF_labels_mod.remove('Shooting Modes')
+                index = batch_parameters_EXIF_mod.index('ExposureProgram')
+                batch_parameters_EXIF_mod[index] = 'ExposureMode'
+                #batch_parameters_EXIF_mod.remove('ExposureProgram')
+                #batch_parameters_EXIF_labels_mod.remove('Shooting Modes')
 
             #Sort EXIF into separate dictionaries (set in definitions file)
             #print('Processing #' + str(photo+1) + ' of ' + str(len(files_list)) + ': ' + files_list[photo])
@@ -606,7 +632,7 @@ elif selection == 3:
     print('Sorting complete')
 
     #Print out results
-    printAllEXIFDicts(extracted_exif_dict)
+    printAllEXIFDicts()
 
 
 #-------------------------------------------------------------------------------
@@ -663,21 +689,31 @@ elif selection == 4:
         #Convert raw output to dictionary
         extracted_exif_dict = EXIFToolDataToDict(extracted_exif)
 
+        #Add in missing lens metadata where appropriate
+        if 'CameraModelName' in extracted_exif_dict.keys() and extracted_exif_dict['CameraModelName'] in no_lens_metadata:
+            extracted_exif_dict['LensID'] = missing_lens_model_metadata[extracted_exif_dict['CameraModelName']]
+
+        #Convert smartphone focal lengths to 35 mm equivalents:
+        if extracted_exif_dict['CameraModelName'] in phones_list and extracted_exif_dict['FocalLength'] in phone_35mm_conversion:
+            extracted_exif_dict['FocalLength'] = phone_35mm_conversion[extracted_exif_dict['FocalLength']]
+
         #Precheck #1: Do not process phone camera photos (no EXIF)
         if 'CameraModelName' not in extracted_exif_dict.keys():
             #print('Processing #' + str(photo+1) + ' of ' + str(len(full_file_list)) + ': ' + full_file_list[photo] + ' [WARNING: NO EXIF DETECTED]')
-            pass
+            no_exif += 1
         #Precheck #2: Remove selected EXIF tags based on camera (not all include every EXIF tag)
         else:
             batch_parameters_EXIF_mod = batch_parameters_EXIF[:]
             batch_parameters_EXIF_labels_mod = batch_parameters_EXIF_labels[:]
 
-            if extracted_exif_dict['CameraModelName'] in phones_list or extracted_exif_dict['CameraModelName'] in point_and_shoot_list:
-                batch_parameters_EXIF_mod.remove('LensID')
-                batch_parameters_EXIF_labels_mod.remove('Lenses')
+            #if extracted_exif_dict['CameraModelName'] in phones_list or extracted_exif_dict['CameraModelName'] in point_and_shoot_list:
+            #    batch_parameters_EXIF_mod.remove('LensID')
+            #    batch_parameters_EXIF_labels_mod.remove('Lenses')
             if extracted_exif_dict['CameraModelName'] in no_exposure_program:
-                batch_parameters_EXIF_mod.remove('ExposureProgram')
-                batch_parameters_EXIF_labels_mod.remove('Shooting Modes')
+                index = batch_parameters_EXIF_mod.index('ExposureProgram')
+                batch_parameters_EXIF_mod[index] = 'ExposureMode'
+                #batch_parameters_EXIF_mod.remove('ExposureProgram')
+                #batch_parameters_EXIF_labels_mod.remove('Shooting Modes')
 
             #Sort EXIF into separate dictionaries (set in definitions file)
             #print('Processing #' + str(photo+1) + ' of ' + str(len(full_file_list)) + ': ' + full_file_list[photo])
@@ -690,7 +726,7 @@ elif selection == 4:
     print('Sorting complete')
 
     #Print out results
-    printAllEXIFDicts(extracted_exif_dict)
+    printAllEXIFDicts()
 
 
 #-------------------------------------------------------------------------------
@@ -731,6 +767,24 @@ if selection == 3 or selection == 4:
     focal_length = sortDictByKey(focal_length_EXIF_dict, 'focal_length')
     unclassified = metadata_tally_dict
 
+    #Insert any null values
+    dict_list = [manufacturers, cameras, lenses, modes, apertures, shutter_speed, iso, focal_length, unclassified]
+    if selection == 3:
+        expected_total_photos = len(files_list)
+    elif selection == 4:
+        expected_total_photos = len(full_file_list)
+    for item in range(len(dict_list)):
+        actual_total_photos = sum(dict_list[item].values())
+        if actual_total_photos != expected_total_photos:
+            if no_exif == 0:
+                total_diff = expected_total_photos - actual_total_photos
+                dict_list[item].update({'N/A': total_diff})
+            else:
+                total_diff = expected_total_photos - actual_total_photos - no_exif
+                if total_diff != 0:
+                    dict_list[item].update({'N/A': total_diff})
+                dict_list[item].update({'No Metadata': no_exif})               
+
     #Convert dictionaries into lists
     manufacturers = list(manufacturers.items())
     cameras = list(cameras.items())
@@ -763,14 +817,14 @@ if selection == 3 or selection == 4:
     elif selection == 4:
         filename_out = "statistics_[" + directory.split("\\")[-1] + "][with_subfolders].ods"
     pyexcel_ods3.save_data(filename_out, write_out)
-
-    #Closing messsages
     print("")
     print('='*80)
     print('\nFile "' + filename_out + '" saved to: ' + os.getcwd())
-    print('\nAll processes completed')
-    print('Program terminated')
 
-    #Display session length
-    time_end = datetime.datetime.now()
-    formatTime((time_end-time_start).total_seconds())
+#Closing messages
+print('\nAll processes completed')
+print('Program terminated')
+
+#Display session length
+time_end = datetime.datetime.now()
+formatTime((time_end-time_start).total_seconds())

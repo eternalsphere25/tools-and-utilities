@@ -23,14 +23,16 @@ point_and_shoot_list = [
     'Canon DIGITAL IXUS 55',
     'Canon PowerShot S45',
     'COOLPIX L4',
-    'COOLPIX L10'
+    'COOLPIX L10',
+    'COOLPIX L12'
     ]
 
 exposure_programs_list = [
     'Not Defined',
     'Aperture-priority AE',
     'Shutter speed priority AE',
-    'Manual'
+    'Manual',
+    'Auto'
     ]
 
 lens_list_z_mount = [
@@ -167,5 +169,34 @@ no_lens_metadata = [
     'Canon DIGITAL IXUS 55',
     'Canon PowerShot S45',
     'COOLPIX L4',
-    'COOLPIX L10'
+    'COOLPIX L10',
+    'COOLPIX L12'
     ]
+
+missing_lens_model_metadata = {
+    'SAMSUNG-SGH-I747': 'Samsung 3.7 mm (35 mm equivalent: 26.68 mm); f/2.6',
+    'SAMSUNG-SM-G900A': 'Samsung 4.8 mm (35 mm equivalent: 31 mm); f/2.2',
+    'SM-G950F': 'Samsung 4.2 mm (35 mm equivalent: 26 mm); f/1.7',
+    'Canon DIGITAL IXUS 55': 'Canon 5.8-17.4 mm (35 mm equivalent: 35-105 mm); f/2.8-4.9',
+    'Canon PowerShot S45': 'Canon 7.1-21.3 mm zoom lens (35 mm equivalent: 35-105 mm); f/2.8-4.9',
+    'COOLPIX L4': 'Nikkor 6.3-18.9 mm (35 mm equivalent: 38-114 mm); f/2.8-4.9',
+    'COOLPIX L10': 'Nikkor 6.2-18.6 mm (35 mm equivalent: 37.5-112.5 mm); f/2.8-5.2',
+    'COOLPIX L12': 'Nikkor 5.7-17.1 mm (35 mm equivalent: 35-105 mm); f/2.8-4.7'
+    }
+
+missing_lens_manufacturer = {
+    'SAMSUNG-SGH-I747': 'Samsung',
+    'SAMSUNG-SM-G900A': 'Samsung',
+    'SM-G950F': 'Samsung',
+    'Canon DIGITAL IXUS 55': 'Canon',
+    'Canon PowerShot S45': 'Canon',
+    'COOLPIX L4': 'Nikon',
+    'COOLPIX L10': 'Nikon',
+    'COOLPIX L12': 'Nikon'
+    }
+
+phone_35mm_conversion = {
+    '3.7 mm': '3.7 mm (35 mm equivalent: 26.68 mm)',
+    '4.8 mm': '4.8 mm (35 mm equivalent: 31 mm)',
+    '4.2 mm': '4.2 mm (35 mm equivalent: 26 mm)'
+    }
