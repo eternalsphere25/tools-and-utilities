@@ -603,23 +603,17 @@ elif selection == 3:
 
         #Precheck #1: Do not process photos with no EXIF data
         if 'CameraModelName' not in extracted_exif_dict.keys():
-            #print('Processing #' + str(photo+1) + ' of ' + str(len(files_list)) + ': ' + files_list[photo] + ' [WARNING: NO EXIF DETECTED]')
-        #Precheck #2: Remove selected EXIF tags based on camera (not all include every EXIF tag)
             no_exif += 1
+        #Precheck #2: Remove selected EXIF tags based on camera (not all include every EXIF tag)
         else:
             batch_parameters_EXIF_mod = batch_parameters_EXIF[:]
             batch_parameters_EXIF_labels_mod = batch_parameters_EXIF_labels[:]
-            #if extracted_exif_dict['CameraModelName'] in phones_list or extracted_exif_dict['CameraModelName'] in point_and_shoot_list:
-            #    batch_parameters_EXIF_mod.remove('LensID')
-            #    batch_parameters_EXIF_labels_mod.remove('Lenses')
+
             if extracted_exif_dict['CameraModelName'] in no_exposure_program:
                 index = batch_parameters_EXIF_mod.index('ExposureProgram')
                 batch_parameters_EXIF_mod[index] = 'ExposureMode'
-                #batch_parameters_EXIF_mod.remove('ExposureProgram')
-                #batch_parameters_EXIF_labels_mod.remove('Shooting Modes')
 
             #Sort EXIF into separate dictionaries (set in definitions file)
-            #print('Processing #' + str(photo+1) + ' of ' + str(len(files_list)) + ': ' + files_list[photo])
             sortEXIF(extracted_exif_dict, metadata_tally_dict, batch_parameters_EXIF_mod)
     print('Metadata extracted successfully')
 
@@ -699,24 +693,17 @@ elif selection == 4:
 
         #Precheck #1: Do not process phone camera photos (no EXIF)
         if 'CameraModelName' not in extracted_exif_dict.keys():
-            #print('Processing #' + str(photo+1) + ' of ' + str(len(full_file_list)) + ': ' + full_file_list[photo] + ' [WARNING: NO EXIF DETECTED]')
             no_exif += 1
         #Precheck #2: Remove selected EXIF tags based on camera (not all include every EXIF tag)
         else:
             batch_parameters_EXIF_mod = batch_parameters_EXIF[:]
             batch_parameters_EXIF_labels_mod = batch_parameters_EXIF_labels[:]
 
-            #if extracted_exif_dict['CameraModelName'] in phones_list or extracted_exif_dict['CameraModelName'] in point_and_shoot_list:
-            #    batch_parameters_EXIF_mod.remove('LensID')
-            #    batch_parameters_EXIF_labels_mod.remove('Lenses')
             if extracted_exif_dict['CameraModelName'] in no_exposure_program:
                 index = batch_parameters_EXIF_mod.index('ExposureProgram')
                 batch_parameters_EXIF_mod[index] = 'ExposureMode'
-                #batch_parameters_EXIF_mod.remove('ExposureProgram')
-                #batch_parameters_EXIF_labels_mod.remove('Shooting Modes')
 
             #Sort EXIF into separate dictionaries (set in definitions file)
-            #print('Processing #' + str(photo+1) + ' of ' + str(len(full_file_list)) + ': ' + full_file_list[photo])
             sortEXIF(extracted_exif_dict, metadata_tally_dict, batch_parameters_EXIF_mod)
     print('Metadata extracted successfully')
 
