@@ -12,7 +12,6 @@
 # + Wrote the program
 #------------------------------------------------------------------------------
 
-
 import re
 
 def check_if_valid_roman_numeral(input_key, input_dict):
@@ -101,6 +100,55 @@ numeral_dict = {
 
 valid = True
 
+numeral_definition = {
+    'I': 1,
+    'V': 5,
+    'X': 10,
+    'L': 50,
+    'C': 100,
+    'D': 500,
+    'M': 1000
+    }
+
+numeral_definition_examples = {
+    'XXVII': 27,
+    'CXVII': 117,
+    'CCXVIII': 218,
+    'CCXXXV': 235,
+    'CCCXII': 312,
+    'CCCXXX': 330,
+    'CCCXXXVIII': 338,
+    'CCCLXXVI': 376,
+    'DXXVI': 526,
+    'DXXXVI': 536,
+    'DCXXXVI': 636,
+    'DCCLIII': 753,
+    'MLXXI': 1071,
+    'MCCLXI': 1261
+    }
+
+numeral_abbreviation_definition = {
+    'IV': 4,
+    'IX': 9,
+    'XL': 40,
+    'XC': 90,
+    'CD': 400,
+    'CM': 900
+    }
+
+numeral_abbreviation_definition_examples = {
+    'XLV': 45,
+    'XCI': 91,
+    'CCCXCV': 395,
+    'CDX': 410,
+    'CDLXXVI': 476,
+    'DIX': 509,
+    'MLIV': 1054,
+    'MCCIV': 1204,
+    'MCCCXXIX': 1329,
+    'MCDLIII': 1453
+    }
+
 
 #-------------------------------------------------------------------------------
 # PART 1: Choose conversion mode
@@ -110,6 +158,7 @@ while True:
     try:
         print('\n' + '='*40)
         print('Choose conversion mode:')
+        print('0: Roman Numeral Quick Guide')
         print('1: Roman to Arabic')
         print('2: Arabic to Roman')
         mode = int(input('\nChoice: '))
@@ -117,6 +166,32 @@ while True:
     except ValueError:
         print('INPUT ERROR: Non-digit character(s) entered')
         print('Please enter a number (1,2,3 etc)')
+
+
+#-------------------------------------------------------------------------------
+# PART 2A: Print out explanation for Roman numerals (kind of like a tutorial)
+#-------------------------------------------------------------------------------
+
+if mode == 0:
+
+    print('\n' + '-'*40)
+    print('Roman Numeral Quick Guide')
+
+    print('\nBase Roman numerals and their values:')
+    for key,value in numeral_definition.items():
+        print(key + ': ' + str(value))
+
+    print('\nNumbers are made by adding the appropriate number of values. A few examples:')
+    for key,value in numeral_definition_examples.items():
+        print(key + ': ' + str(value))
+
+    print('\nBecause no numeral is allowed to repeat 4 times, the following special abbreviations are used:')
+    for key,value in numeral_abbreviation_definition.items():
+        print(key + ': ' + str(value))
+
+    print('\nA few examples of Roman numerals including abbreviations:')
+    for key,value in numeral_abbreviation_definition_examples.items():
+        print(key + ': ' + str(value))
 
 
 #-------------------------------------------------------------------------------
@@ -129,7 +204,6 @@ if mode == 1:
     print('Roman to Arabic conversion mode selected')
     input_string = str(input('Enter Roman numerals to convert: '))
 
-
     #Verify all characters are vaild Roman numerals
     string_list = list(input_string)
     for x in range(len(string_list)):
@@ -138,7 +212,6 @@ if mode == 1:
 
     #Verify no single character repeats 4 times in a row
     repeat = re.search("(.)\\1{3}", input_string)
-
 
     if valid == False:
         print('\nERROR: Invalid character found. Valid Roman numerals are: ' + str(roman_numeral_chars))
