@@ -8,14 +8,18 @@
 #
 # Changelog
 #
-# Version 1.0
+# Version 1.1
+# 10/10/2022
+# + Modifications
+#   - Rewrote some display code to make user input easier
+#
 # 9/12/2022
 # + New Features
 #   - Wrote the program
 #------------------------------------------------------------------------------
 
 import sqlite3
-from config import *
+from database_config import *
 
 
 #********************
@@ -54,14 +58,14 @@ def get_tables_in_database(cursor):
     return table_names
 
 def input_value_text_prompt(input_list):
-    print(f"\nInput {input_list[0]} separated by a comma")
-    print(f"Example: {input_list[1]}, {input_list[2]}, "
-            f"{input_list[3]}, {input_list[4]}")
+    print(f"\nInput {input_list[0]} separated by a comma. Valid input examples:"
+          f"\n - {input_list[1]}\n - {input_list[2]}\n - {input_list[3]}"
+          f"\n - {input_list[4]}\n - {input_list[5]}")
 
 def locate_database():
     print('\nInput existing database (1) file path and (2) name: ')
     db_location = input('1. File Path: ')
-    file_name = input('2. Database Name: ')
+    file_name = input('2. Database Name (do not include ".db"): ')
     path = str(db_location) + '\\' + str(file_name) + ('.db')
     return path 
 
@@ -72,6 +76,12 @@ def print_as_bulleted_list_no_caps(array):
 def print_as_list(input_list):
 	for x in range(len(input_list)):
 		print(str(input_list[x]))
+
+def print_two_lists_as_dict(input_list1, input_list2):
+    output_dict = {input_list1[x]: input_list2[x] for x in 
+                   range(len(input_list1))}
+    for y in output_dict:
+        print(f' - {y} [{output_dict[y]}]')
 
 def print_table_contents_modified(cursor, input_table):
     print('\nRecord added successfully')
@@ -131,7 +141,7 @@ def create_table(file_path):
 
          #Input column name(s)    
         input_value_text_prompt(input_display_text_column) 
-        column_input = input('Input: ')
+        column_input = input('\nInput: ')
         column_input_list = split_string_on_commas(column_input)
 
         #Input column datatypes
@@ -195,15 +205,14 @@ def add_value_to_column(file_path):
     #Get column names from table
     print('\nList of columns and datatypes in database:')
     column_data_names = get_column_names_and_datatypes_from_table(cur, table)
-    print(column_data_names[0])
-    print(column_data_names[1])
+    print_two_lists_as_dict(column_data_names[0], column_data_names[1])
 
     while True:
         proceed = False
         while proceed == False:
             #Input new values
             input_value_text_prompt(input_display_text_new_row)
-            input_string = input('Input: ')
+            input_string = input('\nInput: ')
 
             #Assemble SQL query
             query = ("INSERT INTO " + table + " VALUES (" + 
@@ -525,8 +534,7 @@ def print_table_contents(file_path):
     #Print results
     column_data_names = get_column_names_and_datatypes_from_table(cur, table)
     print('\nColumn Names:')
-    print(column_data_names[0])
-    print(column_data_names[1])
+    print_two_lists_as_dict(column_data_names[0], column_data_names[1])
     print('\nRecords:')
     print_as_list(results)
 

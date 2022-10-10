@@ -11,7 +11,8 @@ input_display_text_column = [
 	'name1',
 	'name2',
 	'name3',
-	'name4'
+	'name4',
+	'name5'
 	]
 
 input_display_text_datatype = [
@@ -19,7 +20,8 @@ input_display_text_datatype = [
 	'type1',
 	'type2',
 	'type3',
-	'type4'
+	'type4',
+	'type5'
 	]
 
 input_display_text_new_row = [
@@ -27,4 +29,6 @@ input_display_text_new_row = [
 	"'sample'",
 	1,
 	1.0,
-	"YYYY-MM-DD HH:MM:SS.SSS"]
+	"'YYYY-MM-DD HH:MM:SS.SSS'",
+	"NULL"
+	]
