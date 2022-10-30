@@ -20,10 +20,20 @@
 
 import sqlite3
 from database_config import *
+from general_functions import *
 
 
 #********************
 #0: SHARED FUNCTIONS
+
+
+def continue_stop_program():
+    selection = input('\nExit program? y/n: ')
+    if selection == 'n':
+        choice = 0
+    elif selection == 'y':
+        choice = 1
+    return choice
 
 def check_for_incorrect_datatype(input_list):
     error_check = []
@@ -34,11 +44,11 @@ def check_for_incorrect_datatype(input_list):
             error_check.append(1)
     return error_check
 
-def execute_query_prompt(input_query):
-    print('\nSQL Query:\n')
-    print('\t' + input_query)
-    output_decision = input('\nExecute? y/n: ')
-    return output_decision
+#def execute_query_prompt(input_query):
+#    print('\nSQL Query:\n')
+#    print('\t' + input_query)
+#    output_decision = input('\nExecute? y/n: ')
+#    return output_decision
 
 def get_column_names_and_datatypes_from_table(cursor, input_table):
     #FYI - PRAGMA returns a tuple 
@@ -50,32 +60,10 @@ def get_column_names_and_datatypes_from_table(cursor, input_table):
     datatypes = [item[2] for item in results]
     return column_names, datatypes
 
-def get_tables_in_database(cursor):
-    query = "SELECT name FROM sqlite_master WHERE type='table'"
-    cursor.execute(query)
-    results = cursor.fetchall()
-    table_names = [item[0] for item in results]
-    return table_names
-
 def input_value_text_prompt(input_list):
     print(f"\nInput {input_list[0]} separated by a comma. Valid input examples:"
           f"\n - {input_list[1]}\n - {input_list[2]}\n - {input_list[3]}"
           f"\n - {input_list[4]}\n - {input_list[5]}")
-
-def locate_database():
-    print('\nInput existing database (1) file path and (2) name: ')
-    db_location = input('1. File Path: ')
-    file_name = input('2. Database Name (do not include ".db"): ')
-    path = str(db_location) + '\\' + str(file_name) + ('.db')
-    return path 
-
-def print_as_bulleted_list_no_caps(array):
-	for x in range(len(array)):
-		print('* ' + str(array[x]))
-
-def print_as_list(input_list):
-	for x in range(len(input_list)):
-		print(str(input_list[x]))
 
 def print_two_lists_as_dict(input_list1, input_list2):
     output_dict = {input_list1[x]: input_list2[x] for x in 
@@ -560,6 +548,7 @@ def run_database_tool():
         '9: Display Table Contents'
     ]
 
+    continue_program = 0
 
     #---------------------------------------------------------------------------
     #STEP 1: Execute Program
@@ -567,51 +556,54 @@ def run_database_tool():
 
     print('\nEstablishing database connection, standby...')
     print('Database connection online')
-    print('\nSelect Option:')
-    print_as_list(menu_options)
-    choice = int(input('\nChoice: '))
 
-    if choice == 1:
-        name_input = input('\nInput new database name: ')
-        new_database_name = str(name_input) + ('.db')
-        create_database(new_database_name)
-        print('\nDatabase successfully created!')
+    while continue_program == 0:
+        print('\nSelect Option:')
+        print_as_list(menu_options)
+        choice = int(input('\nChoice: '))
 
-    elif choice == 2:
-        full_path = locate_database()
-        create_table(full_path)
-        print('\nTable added successfully!')
+        if choice == 1:
+            name_input = input('\nInput new database name: ')
+            new_database_name = str(name_input) + ('.db')
+            create_database(new_database_name)
+            print('\nDatabase successfully created!')
 
-    elif choice == 3:
-        full_path = locate_database()
-        add_value_to_column(full_path)
-        print('\nRows(s) added successfully!')
+        elif choice == 2:
+            full_path = locate_database_manual()
+            create_table(full_path)
+            print('\nTable added successfully!')
 
-    elif choice == 4:
-        full_path = locate_database()
-        add_column_to_table(full_path)
-        print('\nColumn(s) added successfully!')
+        elif choice == 3:
+            full_path = locate_database_manual()
+            add_value_to_column(full_path)
+            print('\nRows(s) added successfully!')
 
-    elif choice == 5:
-        full_path = locate_database()
-        modify_record(full_path)
+        elif choice == 4:
+            full_path = locate_database_manual()
+            add_column_to_table(full_path)
+            print('\nColumn(s) added successfully!')
 
-    elif choice == 6:
-        full_path = locate_database()
-        delete_record(full_path)
+        elif choice == 5:
+            full_path = locate_database_manual()
+            modify_record(full_path)
 
-    elif choice == 7:
-        full_path = locate_database()
-        delete_table(full_path)
+        elif choice == 6:
+            full_path = locate_database_manual()
+            delete_record(full_path)
 
-    elif choice == 8:
-        full_path = locate_database()
-        rename_table(full_path)
+        elif choice == 7:
+            full_path = locate_database_manual()
+            delete_table(full_path)
 
-    elif choice == 9:
-        full_path = locate_database()
-        print_table_contents(full_path)
+        elif choice == 8:
+            full_path = locate_database_manual()
+            rename_table(full_path)
 
+        elif choice == 9:
+            full_path = locate_database_manual()
+            print_table_contents(full_path)
+
+        continue_program = continue_stop_program()
 
 #------------------------------------------------------------------------------
 # UNCOMMENT BELOW TO RUN CODE DIRECTLY
