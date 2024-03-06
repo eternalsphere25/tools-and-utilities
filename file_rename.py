@@ -1,121 +1,86 @@
-import os
-import glob
+from pathlib import Path
 
-def listRange(index, input):
-	value = list(range(index,len(input)))
-	return value
 
-def printAsList(input, index):
-	print(input[index])
+def clean_input_path_str(input_str):
+	if (input_str.startswith('"') == True and input_str.endswith('"') == True):
+		output_str = Path(input_dir_str[1:-1])
+	else:
+		output_str = Path(input_dir_str)
+	return output_str
 
 
 #------------------------------------------------------------------------------
-#STEP 1: Search for files to rename
+# STEP 1: Search for files to rename
 #------------------------------------------------------------------------------
 
 print('\nEstablishing connection, standby...')
 print('Connection online')
 
-#Find all files of specified type
-file_extension = str(input(
+# Get user input
+file_ext = str(input(
 	'\nSet file extension to search for (do not include dot): '))
-directory = str(input('Input folder path: '))
-files = glob.glob(directory + '/*' + file_extension)
-files_list_length = listRange(1, files)
+input_dir_str = str(input('Input folder path: '))
 
-#Extract file names from full file address
-files_name_only = [os.path.basename(files[0])]
-for f in files_list_length:
-	files_name_only.append(os.path.basename(files[f]))
-	pass
+# Clean up input string
+input_dir = clean_input_path_str(input_dir_str)
 
-#List out all data files found in folder
+# Find all files of specified type
+file_list = sorted(input_dir.glob(f"*.{file_ext}"))
+
+# Display files found that match input file extension
 print('\nList of data files found: ')
-files_list_length = listRange(0, files)
-for names in files_list_length:
-	printAsList(files_name_only, names)
+print(*[f"- {item.name}" for item in file_list], sep="\n")
 
+
+#------------------------------------------------------------------------------
+# STEP 2: Remove/Replace selected characters from file name
+#------------------------------------------------------------------------------
+
+# Show options menu and get user choice
 print('\nSelect task:')
 print('1. Remove characters')
 print('2. Replace characters')
 choice = int(input('Selection: '))
 
+# Perform selected operation
+print('\nRenaming files...')
 if choice == 1:
-	#---------------------------------------------------------------------------
-	#STEP 2a: Remove selected characters from file name
-	#---------------------------------------------------------------------------
-
-	#Select portion to remove
+	# Select portion to remove
 	remove_this = str(input('\nInput characters to remove: '))
 
-	#Rename files
-	print('\nRenaming files...')
-	file_dir = directory + "\\"
-	for file in os.listdir(directory):
-		print('\nFile ' + str(files_name_only.index(file)+1) + ' of ' + str(
-			len(files_list_length)))
-		os.replace(file_dir + file, file_dir + file.replace(remove_this, ''))
-		print('File renamed')
-
-	#Display new names
-	files = glob.glob(directory + '/*' + file_extension)
-	files_list_length = listRange(1, files)
-
-	#Extract file names from full file address
-	files_name_only = [os.path.basename(files[0])]
-	for f in files_list_length:
-		files_name_only.append(os.path.basename(files[f]))
-		pass
-
-	#List out all data files found in folder
-	print('\nList of new file names: ')
-	files_list_length = listRange(0, files)
-	for names in files_list_length:
-		printAsList(files_name_only, names)
+	# Rename files
+	for input_file in file_list:
+		print(f"File {file_list.index(input_file)+1} of {len(file_list)}")
+		input_file.replace(input_file.with_name(
+			input_file.name.replace(remove_this, "")))
+		print("File processed")
 
 elif choice == 2:
-	#---------------------------------------------------------------------------
-	#STEP 2b: Replace selected characters in file name
-	#---------------------------------------------------------------------------
-
-	#Select portion to remove
+	# Select portion to rename
 	replace_this = str(input('\nInput characters to replace: '))
 	with_this = str(input('Input replacement characters: '))
 
-	#Rename files
-	print('\nRenaming files...')
-	file_dir = directory + "\\"
-	for file in os.listdir(directory):
-		print('\nFile ' + str(files_name_only.index(file)+1) + ' of ' + str(
-			len(files_list_length)))
-		os.replace(file_dir + file, file_dir + file.replace(
-			replace_this, with_this))
-		print('File renamed')
-
-	#Display new names
-	files = glob.glob(directory + '/*' + file_extension)
-	files_list_length = listRange(1, files)
-
-	#Extract file names from full file address
-	files_name_only = [os.path.basename(files[0])]
-	for f in files_list_length:
-		files_name_only.append(os.path.basename(files[f]))
-		pass
-
-	#List out all data files found in folder
-	print('\nList of new file names: ')
-	files_list_length = listRange(0, files)
-	for names in files_list_length:
-		printAsList(files_name_only, names)
+	# Rename files
+	for input_file in file_list:
+		print(f"File {file_list.index(input_file)+1} of {len(file_list)}")
+		
+		input_file.replace(input_file.with_name(
+			input_file.name.replace(replace_this, with_this)))
+		print('File processed')
 
 else:
 	print('ERROR: Invalid input')
 
+# Display new names
+file_list = sorted(input_dir.glob(f"*.{file_ext}"))
+print('\nList of new file names: ')
+print(*[f"- {item.name}" for item in file_list], sep="\n")
+
 
 #------------------------------------------------------------------------------
-#STEP 3: Close program
+# STEP 3: Close program
 #------------------------------------------------------------------------------
 
-#End program
+# End program
 print('\nProcess completed')
 print('Connection terminated')
