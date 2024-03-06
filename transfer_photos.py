@@ -55,8 +55,11 @@ def run_robocopy(input_date):
 filename = Path(__file__).name
 cwd = Path(__file__).parent
 
-# Set destination root directory
-root_dir_dest = Path("D:/写真/")
+# Get destination root directory path from config file
+dest_dir = Path(Path(__file__).parents[1], "info_files", 
+                "photo_transfer_dest_dir.txt")
+with open(dest_dir, encoding="utf-8") as input_file:
+    root_dir_dest = Path(input_file.read())
 
 # Set media file types to search for
 file_types = {"nef", "jpg", "mp4"}
