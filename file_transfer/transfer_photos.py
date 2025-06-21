@@ -1,8 +1,3 @@
-#------------------------------------------------------------------------------
-# This program takes an input folder with image files, then automatically sorts
-# and copies them over to the server
-#------------------------------------------------------------------------------
-
 import subprocess
 import sys
 import tomllib
@@ -18,33 +13,14 @@ from pathlib import Path
 # CLASSES
 ###############################################################################
 
-class Transfer:
-    # Define class variables
-    dir_root = Path(__file__).resolve().parents[0]
-    file_types = ['nef', 'jpg', 'mp4']
-
-    def __init__(self, input_dir):
-        self.dir_source = input_dir
-        self.import_config()
-        self.dir_dest = Path(self.config['destination']['destination'])
+class TransferFiles:
+    def __init__(self):
+        pass
 
     def import_config(self):
         config_file = __class__.dir_root.joinpath(Path('config.toml'))
         with open(config_file, 'rb') as file_in:
             self.config = tomllib.load(file_in)
-
-    def get_file_list(self, input_dir, input_ext):
-        glob_result = input_dir.glob(f'*.{input_ext}')
-        output_list = [x for x in glob_result if x.is_file()]
-        return output_list
-
-    def build_file_list(self):
-        # Generate file lists
-        print("\nSearching for photo and video files...")
-        for x in __class__.file_types:
-            setattr(self, f'files_{x}', self.get_file_list(self.dir_source, x))
-            print(f"- {len(getattr(self, f'files_{x}'))} {x.upper()} "
-                  f"file(s) found")
 
     def confirm_transfer(self):
         do_transfer = input(f"\nProceed with file transfer? y/n\nChoice: ")
@@ -53,6 +29,11 @@ class Transfer:
         else:
             print('Transfer cancelled...')
             sys.exit()
+
+    def get_file_list(self, input_dir, input_ext):
+        glob_result = input_dir.glob(f'*.{input_ext}')
+        output_list = [x for x in glob_result if x.is_file()]
+        return output_list
 
     def get_file_mod_dates(self, input_list):
         list_of_dates, files_with_dates = [], {}
@@ -63,6 +44,44 @@ class Transfer:
             if file_datetime.date() not in list_of_dates:
                 list_of_dates.append(file_datetime.date())
         return list_of_dates, files_with_dates
+
+    def run_robocopy(self, input_date, input_path):
+        # Set flags to use with robocopy
+        date_1 = str(input_date).replace("-","")
+        date_2 = str(input_date + timedelta(days=1)).replace("-","")
+        date_now = str(datetime.now().date()).replace("-","")
+        time_now = str(datetime.now().time()).replace(":","").split(".")[0]
+        log_file = self.dir_dest.joinpath(Path(\
+            'Robocopy Transfer Logs', f'{date_now + '_' + time_now}.txt'))
+
+        # Copy files from source to destination with robocopy
+        subprocess.run(['robocopy', f'{str(self.dir_source)}', 
+                        f'{str(input_path)}', '/s', '/xo', '/v', 
+                        f'/maxage:{date_1}', f'/minage:{date_2}', 
+                        f'/unilog+:{log_file}', '/mt:128', '/tee', '/eta'])
+
+
+# IMPLEMENT PHOTOS AS A CHILD CLASS OF FILES
+
+class TransferPhotos(TransferFiles):
+    # Define class variables
+    dir_root = Path(__file__).resolve().parents[0]
+    file_types = ['nef', 'jpg', 'mp4']
+
+    def __init__(self, input_dir):
+        super().__init__()
+        self.dir_source = input_dir
+        self.import_config()
+        self.dir_dest = Path(self.config['destination']['destination'])
+
+
+    def build_file_list(self):
+        # Generate file lists
+        print("\nSearching for photo and video files...")
+        for x in __class__.file_types:
+            setattr(self, f'files_{x}', self.get_file_list(self.dir_source, x))
+            print(f"- {len(getattr(self, f'files_{x}'))} {x.upper()} "
+                  f"file(s) found")
 
     def run_transfer(self):
         for x in __class__.file_types:
@@ -92,21 +111,6 @@ class Transfer:
                     else:
                         self.run_robocopy(date, dest_path)
 
-    def run_robocopy(self, input_date, input_path):
-        # Set flags to use with robocopy
-        date_1 = str(input_date).replace("-","")
-        date_2 = str(input_date + timedelta(days=1)).replace("-","")
-        date_now = str(datetime.now().date()).replace("-","")
-        time_now = str(datetime.now().time()).replace(":","").split(".")[0]
-        log_file = self.dir_dest.joinpath(Path(\
-            'Robocopy Transfer Logs', f'{date_now + '_' + time_now}.txt'))
-
-        # Copy files from source to destination with robocopy
-        subprocess.run(['robocopy', f'{str(self.dir_source)}', 
-                        f'{str(input_path)}', '/s', '/xo', '/v', 
-                        f'/maxage:{date_1}', f'/minage:{date_2}', 
-                        f'/unilog+:{log_file}', '/mt:128', '/tee', '/eta'])
-
 
 ###############################################################################
 # FUNCTIONS
@@ -125,7 +129,7 @@ if __name__ == '__main__':
         sys.exit()
     
     # Generate object
-    transfer = Transfer(dir_source)
+    transfer = TransferPhotos(dir_source)
 
     # Build list of files inside the directory
     transfer.build_file_list()

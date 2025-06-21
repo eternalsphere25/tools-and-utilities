@@ -1,0 +1,86 @@
+{
+    "roman_arabic_1000_dict": {
+        "M": 1000,
+        "MM": 2000,
+        "MMM": 3000
+    },
+    "roman_arabic_100_dict": {
+        "C": 100,
+        "CC": 200,
+        "CCC": 300,
+        "CD": 400,
+        "D": 500,
+        "DC": 600,
+        "DCC": 700,
+        "DCCC": 800,
+        "CM": 900
+    },
+    "roman_arabic_10_dict": {
+        "X": 10,
+        "XX": 20,
+        "XXX": 30,
+        "XL": 40,
+        "L": 50,
+        "LX": 60,
+        "LXX": 70,
+        "LXXX": 80,
+        "XC": 90
+    },
+    "roman_arabic_1_dict": {
+        "I": 1,
+        "II": 2,
+        "III": 3,
+        "IV": 4,
+        "V": 5,
+        "VI": 6,
+        "VII": 7,
+        "VIII": 8,
+        "IX": 9
+    },
+    "roman_numeral_chars": ["I","V","X","L","C","D","M"],
+    "num_def": {
+        "I": 1,
+        "V": 5,
+        "X": 10,
+        "L": 50,
+        "C": 100,
+        "D": 500,
+        "M": 1000
+    },
+    "num_def_ex": {
+        "XXVII": 27,
+        "CXVII": 117,
+        "CCXVIII": 218,
+        "CCXXXV": 235,
+        "CCCXII": 312,
+        "CCCXXX": 330,
+        "CCCXXXVIII": 338,
+        "CCCLXXVI": 376,
+        "DXXVI": 526,
+        "DXXXVI": 536,
+        "DCXXXVI": 636,
+        "DCCLIII": 753,
+        "MLXXI": 1071,
+        "MCCLXI": 1261
+    },
+    "num_abbr_def": {
+        "IV": 4,
+        "IX": 9,
+        "XL": 40,
+        "XC": 90,
+        "CD": 400,
+        "CM": 900
+    },
+    "num_abbr_def_ex": {
+        "XLV": 45,
+        "XCI": 91,
+        "CCCXCV": 395,
+        "CDX": 410,
+        "CDLXXVI": 476,
+        "DIX": 509,
+        "MLIV": 1054,
+        "MCCIV": 1204,
+        "MCCCXXIX": 1329,
+        "MCDLIII": 1453
+    }
+}
